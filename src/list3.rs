@@ -18,12 +18,13 @@ impl<T> List<T> {
         Self { head: None }
     }
 
-    // return list with elem at head
+    // give elem (addtl head), return list with elem at head
+    // old list remains active
     pub fn prepend(&self, elem: T) -> List<T> {
         List {
             head: Some(Rc::new(Node {
                 elem,
-                next: self.head.clone(),
+                next: self.head.clone(), // increase ref count
             })),
         }
     }
@@ -31,25 +32,27 @@ impl<T> List<T> {
     // return list without head elem
     pub fn tail(&self) -> List<T> {
         List {
-            head: self.head.as_ref().and_then(|node| node.next.clone()),
+            // we use and_then because node.next is a Link (Option/RC/Node)
+            // otherwise we'd get Option/Option/RC/Node
+            head: self.head.as_ref().and_then(|node| node.next.clone()), // as ref returns
+                                                                         // Option<&node>
         }
     }
 
     pub fn head(&self) -> Option<&T> {
+        // we use map because closure returns &T and we want to wrap it in an option
         self.head.as_ref().map(|node| &node.elem)
     }
-}
 
-pub struct Iter<'a, T> {
-    next: Option<&'a Node<T>>, // returns optional ref to next node
-}
-
-impl<T> List<T> {
     pub fn iter(&self) -> Iter<'_, T> {
         Iter {
             next: self.head.as_deref(),
         }
     }
+}
+
+pub struct Iter<'a, T> {
+    next: Option<&'a Node<T>>, // returns optional ref to next node
 }
 
 impl<'a, T> Iterator for Iter<'a, T> {
@@ -60,6 +63,20 @@ impl<'a, T> Iterator for Iter<'a, T> {
             self.next = node.next.as_deref();
             &node.elem
         })
+    }
+}
+
+impl<T> Drop for List<T> {
+    fn drop(&mut self) {
+        let mut head = self.head.take(); // self.head = None
+        while let Some(node) = head {
+            if let Ok(mut node) = Rc::try_unwrap(node) {
+                // works only if node has only 1 ref
+                head = node.next.take(); // next entry in list = None
+            } else {
+                break; // can partially destruct the list, only unused elems are removed
+            }
+        }
     }
 }
 
