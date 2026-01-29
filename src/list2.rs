@@ -33,15 +33,11 @@ impl<T> List<T> {
     }
 
     pub fn peek(&self) -> Option<&T> {
-        self.head.as_ref().map(|node| {
-            &node.elem
-        })
+        self.head.as_ref().map(|node| &node.elem)
     }
 
     pub fn peek_mut(&mut self) -> Option<&mut T> {
-        self.head.as_mut().map(|node| {
-            &mut node.elem
-        })
+        self.head.as_mut().map(|node| &mut node.elem)
     }
 }
 
@@ -56,7 +52,9 @@ impl<T> Drop for List<T> {
 
 impl<T> List<T> {
     pub fn iter_mut<'a>(&'a mut self) -> IterMut<'a, T> {
-        IterMut { next: self.head.as_deref_mut() }
+        IterMut {
+            next: self.head.as_deref_mut(),
+        }
     }
 }
 
@@ -68,10 +66,11 @@ impl<'a, T> Iterator for IterMut<'a, T> {
     type Item = &'a mut T;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.next.take().map(|node| { // how does take avoid move out of borrow?
+        self.next.take().map(|node| {
+            // how does take avoid move out of borrow?
             self.next = node.next.as_deref_mut();
             &mut node.elem
-        })    
+        })
     }
 }
 // map pattern
@@ -85,7 +84,9 @@ impl<T> List<T> {
     pub fn iter<'a>(&'a self) -> Iter<'a, T> {
         // borrow head to create iter, so need to define iter, so need to
         // define a lifetime
-        Iter { next: self.head.as_deref() }
+        Iter {
+            next: self.head.as_deref(),
+        }
     }
 }
 
@@ -100,7 +101,7 @@ impl<'a, T> Iterator for Iter<'a, T> {
         self.next.map(|node| {
             self.next = node.next.as_deref(); // update next or evaluate None
             &node.elem // return current value
-        })    
+        })
     }
 }
 
@@ -112,7 +113,8 @@ impl<T> List<T> {
 
 pub struct IntoIter<T>(List<T>); // wraps list type
 
-impl<T> Iterator for IntoIter<T> { // trait impl.
+impl<T> Iterator for IntoIter<T> {
+    // trait impl.
     type Item = T;
     fn next(&mut self) -> Option<Self::Item> {
         self.0.pop()
@@ -138,7 +140,7 @@ mod test {
 
         list.push(4);
         list.push(5);
-        
+
         assert_eq!(list.pop(), Some(5));
         assert_eq!(list.pop(), Some(4));
 
@@ -158,9 +160,7 @@ mod test {
         assert_eq!(list.peek(), Some(&3));
         assert_eq!(list.peek_mut(), Some(&mut 3));
 
-        list.peek_mut().map(|value| {
-            *value = 42
-        });
+        list.peek_mut().map(|value| *value = 42);
         assert_eq!(list.peek(), Some(&42));
         assert_eq!(list.pop(), Some(42));
     }
@@ -171,7 +171,7 @@ mod test {
         list.push(1);
         list.push(2);
         list.push(3);
-        
+
         let mut iter = list.into_iter();
         assert_eq!(iter.next(), Some(3));
         assert_eq!(iter.next(), Some(2));
@@ -185,7 +185,7 @@ mod test {
         list.push(1);
         list.push(2);
         list.push(3);
-        
+
         let mut iter = list.iter();
         assert_eq!(iter.next(), Some(&3));
         assert_eq!(iter.next(), Some(&2));
@@ -199,7 +199,7 @@ mod test {
         list.push(1);
         list.push(2);
         list.push(3);
-        
+
         let mut iter = list.iter_mut();
         assert_eq!(iter.next(), Some(&mut 3));
         assert_eq!(iter.next(), Some(&mut 2));
@@ -207,4 +207,3 @@ mod test {
         assert_eq!(iter.next(), None);
     }
 }
-
