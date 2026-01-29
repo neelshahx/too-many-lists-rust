@@ -1,2 +1,1 @@
-Working through to learn rust
-https://rust-unofficial.github.io/too-many-lists/second.html
+Working through [Too many lists](https://rust-unofficial.github.io/too-many-lists/second.html) to learn rust
