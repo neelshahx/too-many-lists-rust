@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 use std::cell::{Ref, RefCell, RefMut};
 use std::rc::Rc;
 

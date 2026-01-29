@@ -1,5 +1,3 @@
-#![allow(unused)]
-
 use std::ptr;
 
 #[derive(Default)]
